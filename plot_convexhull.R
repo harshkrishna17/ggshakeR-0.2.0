@@ -91,9 +91,8 @@ plot_convexhull <- function(eventData, dataType = "statsbomb",
   } else {
     
   }
-  
-  hull_data %>%
-    ggplot() +
+
+  convex_hull <- ggplot(hull_data) +
     annotate_pitch(dimensions = pitch_statsbomb, fill = fill_b, colour = colour_b) +
     theme_pitch() +
     geom_point(data = data, aes(x = x, y = y), alpha = 0.5, colour = colour_b) +
@@ -105,4 +104,6 @@ plot_convexhull <- function(eventData, dataType = "statsbomb",
           strip.background = element_rect(fill = fill_b, colour = NA),
           strip.text = element_text(colour = colour_b, size = 10),
           plot.title = element_text(colour = colour_b, size = 15, hjust = 0.5, face = "bold"))
+  
+  return(convex_hull)
 }
