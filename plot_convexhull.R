@@ -103,7 +103,7 @@ plot_convexhull <- function(eventData, dataType = "statsbomb",
           panel.background = element_rect(fill = fill_b, colour = NA),
           strip.background = element_rect(fill = fill_b, colour = NA),
           strip.text = element_text(colour = colour_b, size = 10),
-          plot.title = element_text(colour = colour_b, size = 15, hjust = 0.5, face = "bold"))
+          plot.title = element_text(colour = colour_b, size = 18, hjust = 0.5, face = "bold"))
   
   return(convex_hull)
 }
