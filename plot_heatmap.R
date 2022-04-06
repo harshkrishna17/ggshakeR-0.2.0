@@ -79,7 +79,7 @@ plot_heatmap <- function(eventData, type = "", theme = "", dataType = "statsbomb
       binY2 <- c(62, 80)
       
       binX3 <- c(18, 60, 102)
-      binY3 <- c(18, 30, 50, 62)
+      binY3 <- c(18, 28, 52, 62)
       
       binX4 <- c(0, 18)
       binY4 <- c(18, 62)
