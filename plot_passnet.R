@@ -173,6 +173,9 @@ plot_passnet <- function(eventData, dataType = "statsbomb",
        sum(c("x","y","finalX","finalY", "teamId", "playerId", "type", "minute", "outcome") %in% names(eventData)) == 9 &&
        (dataType == "opta")) {
     } else {
+      cols <- c("x","y","finalX","finalY", "teamId", "playerId", "type", "minute", "outcome")
+      print(cols)
+      
       stop("The dataframe does not contain the required columns")
     }
     
