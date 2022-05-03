@@ -1,106 +1,109 @@
-#' Function for plotting convex hulls.
+#' Plotting heatmap
 #'
-#' This function allows for data, that can be from Opta or Statsbomb, to be used
-#' for plotting convex hulls on top of an outline of a football pitch.
+#' This function allows you to plot various types of heatmaps of starting x and y coordinates:
+#' hex bin heatmap,
+#' density heatmap, and
+#' bin heatmap
 #'
-#' @param data Dataframe that houses pass data. Opta dataframe must contain atleast the following columns: `x`, `y`, `finalX`, `finalY`, `playerId`. With StatsBomb data, the default dataset is to be used 
+#' @param data The dataframe that stores your data. Dataframe must contain atleast the following columns: `x`, `y`
+#' @param type indicates the type of heatmap to plot. "hex" indicates hex bins, "density" indicates density (default),
+#' "bin" indicates bin heatmap pass and "jdp" indicates a binned heatmap according jdp pitch markings. 
+#' @param theme indicates what theme the map must be shown in: dark (default), white, rose, almond
 #' @param data_type Type of data that is being put in: opta or statsbomb. Default set to "statsbomb"
-#' @param colour The colour of the outline of the convex hull
-#' @param title_plot Title of the plot
-#' @param theme Indicates what theme the map must be shown in: dark (default), white, rose, almond
-#' @return a ggplot2 object
+#' @param bin indicates the size of the bin to construct heatmap for type "bin". Default set to 20.
+#' @return returns a ggplot2 object
 #'
+#' @importFrom magrittr %>%
 #' @import dplyr
-#' @import tidyr
 #' @import ggplot2
 #' @import ggsoccer
-#' @import purrr
-#'
+#' @import viridis
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' plot <- plot_convexhull(eventData, dataType = "statsbomb", colour = "blue")
+#' plot <- plot_heatmap(touchData, type = "hex")
 #' plot
 #' }
 
-plot_convexhull <- function(data, data_type = "statsbomb", 
-                            colour, title_plot = "", theme = "dark") {
+plot_heatmap <- function(data, type = "", data_type = "statsbomb", bin = 20, theme = "dark") {
   
-  if (theme == "dark") {
-    fill_b <- "#0d1117"
-    colour_b <- "white"
-  } else if (theme == "white") {
-    fill_b <- "#F5F5F5"
-    colour_b <- "black"
-  } else if (theme == "rose") {
-    fill_b <- "#FFE4E1"
-    colour_b <- "#696969"
-  } else if (theme == "almond") {
-    fill_b <- "#FFEBCD"
-    colour_b <- "#696969"
-  }
-  
-  if(data_type == "opta") {
-    if(nrow(data) > 0 &&
-       sum(x = c("x", "y", "finalX", "finalY", "playerId") %in% names(data)) == 5) {
-    } else {
-      stop("The dataset has insufficient columns")
+  if (nrow(data) > 0 &&
+      sum(x = c("x", "y", "finalX", "finalY") %in% names(data)) == 4) {
+    
+    if (data_type == "opta") {
+      to_sb <- rescale_coordinates(from = pitch_opta, to = pitch_statsbomb)
+      data$x <- to_sb$x(data$x)
+      data$y <- to_sb$y(data$y)
     }
     
-    to_sb <- rescale_coordinates(from = pitch_opta, to = pitch_statsbomb)
-    data$x <- to_sb$x(data$x)
-    data$y <- to_sb$y(data$y)
+    plot <- data %>%
+      ggplot(aes(x = x, y = y))
     
-    data <- data %>%
-      drop_na(playerId, x, y)
+    if (theme == "dark") {
+      fill_b <- "#0d1117"
+      colour_b <- "white"
+    } else if (theme == "white") {
+      fill_b <- "#F5F5F5"
+      colour_b <- "black"
+    } else if (theme == "rose") {
+      fill_b <- "#FFE4E1"
+      colour_b <- "#696969"
+    } else if (theme == "almond") {
+      fill_b <- "#FFEBCD"
+      colour_b <- "#696969"
+    }
     
-  } else if(data_type == "statsbomb") {
+    plot <- plot + annotate_pitch(dimensions = pitch_statsbomb, colour = colour_b,
+                                  fill = fill_b) +
+      theme_pitch() +
+      theme(panel.background = element_rect(fill = fill_b))
     
-    data <- data %>%
-      rename(x = location.x,
-             y = location.y,
-             playerId = player.name) %>%
-      drop_na(playerId, x, y)
+    if (type == "" || type == "density") {
+      plot <- plot +
+        stat_density_2d(aes(x = x, y = 80 - y, fill = ..level..), geom = "polygon")
+    } else if (type == "hex") {
+      plot <- plot +
+        geom_hex(aes(x = x, y = 80 - y))
+    } else if (type == "bin") {
+      plot <- plot +
+        geom_bin2d(aes(x = x, y = 80 - y),
+                   binwidth = c(bin, bin),
+                   alpha = 0.9)
+    } else if (type == "jdp") {
+      
+      binX1 <- c(0, 18, 39, 60, 81, 102, 120)
+      binY1 <- c(0, 18)
+      
+      binX2 <- c(0, 18, 39, 60, 81, 102, 120)
+      binY2 <- c(62, 80)
+      
+      binX3 <- c(18, 60, 102)
+      binY3 <- c(18, 30, 50, 62)
+      
+      binX4 <- c(0, 18)
+      binY4 <- c(18, 62)
+      
+      binX5 <- c(102, 120)
+      binY5 <- c(18, 62)
+      
+      plot <- plot +
+        geom_bin_2d(breaks = list(binX1, binY1), colour = colour_b, alpha = 0.9) +
+        geom_bin_2d(breaks = list(binX2, binY2), colour = colour_b, alpha  = 0.9) +
+        geom_bin_2d(breaks = list(binX3, binY3), colour = colour_b, alpha = 0.9) +
+        geom_bin_2d(breaks = list(binX4, binY4), colour = colour_b, alpha = 0.9) +
+        geom_bin_2d(breaks = list(binX5, binY5), colour = colour_b, alpha = 0.9)
+    }
+    
+    plot <- plot +
+      scale_fill_continuous(type = "viridis") +
+      labs(
+        fill = "Density"
+      )
+    
+    plot
+    
+  } else {
+    plot
   }
-  
-  x_low <- quantile(data$x, 0.05)
-  x_high <- quantile(data$x, 0.95)
-  
-  y_low <- quantile(data$y, 0.05)
-  y_high <- quantile(data$y, 0.95)
-  
-  list_data <- split(data, data$playerId)
-  
-  hull_fun <- function(data) {
-    hull_data <- data %>%
-      filter((x > x_low) & (x < x_high)) %>%
-      filter((y > y_low) & (y < y_high)) %>%
-      slice(chull(x, y))
-    
-    return(hull_data)
-  }
-  
-  hull_data <- list_data %>%
-    purrr::map(hull_fun) %>%
-    purrr::reduce(full_join)
-  
-  if(title_plot == "") {
-    title_plot <- "Convex Hulls"
-  } else {}
-  
-  convex_hull <- ggplot(hull_data) +
-    annotate_pitch(dimensions = pitch_statsbomb, fill = fill_b, colour = colour_b) +
-    theme_pitch() +
-    geom_point(data = data, aes(x = x, y = y), alpha = 0.5, colour = colour_b) +
-    geom_polygon(aes(x = x, y = y), colour = colour, alpha = 0.2, fill = colour, size = 1) +
-    facet_wrap(~playerId) +
-    labs(title = title_plot) +
-    theme(plot.background = element_rect(fill = fill_b, colour = NA),
-          panel.background = element_rect(fill = fill_b, colour = NA),
-          strip.background = element_rect(fill = fill_b, colour = NA),
-          strip.text = element_text(colour = colour_b, size = 10),
-          plot.title = element_text(colour = colour_b, size = 18, hjust = 0.5, face = "bold"))
-  
-  return(convex_hull)
 }
