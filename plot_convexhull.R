@@ -3,10 +3,11 @@
 #' This function allows for data, that can be from Opta or Statsbomb, to be used
 #' for plotting convex hulls on top of an outline of a football pitch.
 #'
-#' @param eventData Dataframe that houses pass data. Opta dataframe must contain atleast the following columns: `x`, `y`, `finalX`, `finalY`, `playerId`. With StatsBomb data, the default dataset is to be used. 
-#' @param dataType Type of data that is being put in: opta or statsbomb. Default set to "statsbomb"
-#' @param colour The colour of the outline of the convex hull.
-#' @param titlePlot Title of the plot
+#' @param data Dataframe that houses pass data. Opta dataframe must contain atleast the following columns: `x`, `y`, `finalX`, `finalY`, `playerId`. With StatsBomb data, the default dataset is to be used 
+#' @param data_type Type of data that is being put in: opta or statsbomb. Default set to "statsbomb"
+#' @param colour The colour of the outline of the convex hull
+#' @param title_plot Title of the plot
+#' @param theme Indicates what theme the map must be shown in: dark (default), white, rose, almond
 #' @return a ggplot2 object
 #'
 #' @import dplyr
@@ -23,10 +24,10 @@
 #' plot
 #' }
 
-plot_convexhull <- function(eventData, dataType = "statsbomb", 
-                            colour, titlePlot = "", theme = "") {
+plot_convexhull <- function(data, data_type = "statsbomb", 
+                            colour, title_plot = "", theme = "dark") {
   
-  if (theme == "dark" || theme == "") {
+  if (theme == "dark") {
     fill_b <- "#0d1117"
     colour_b <- "white"
   } else if (theme == "white") {
@@ -39,31 +40,29 @@ plot_convexhull <- function(eventData, dataType = "statsbomb",
     fill_b <- "#FFEBCD"
     colour_b <- "#696969"
   }
-    
-  if(dataType == "opta") {
-    if(nrow(eventData) > 0 &&
-          sum(x = c("x", "y", "finalX", "finalY", "playerId") %in% names(eventData)) == 5) {
-      } else {
-        stop("The dataset has insufficient columns")
-      }
-      
-      to_sb <- rescale_coordinates(from = pitch_opta, to = pitch_statsbomb)
-      eventData$x <- to_sb$x(eventData$x)
-      eventData$y <- to_sb$y(eventData$y)
-      
-      eventData <- eventData %>%
-        drop_na(playerId, x, y)
-      
-      } else if(dataType == "statsbomb") {
-      
-      eventData <- eventData %>%
-        rename(x = location.x,
-               y = location.y,
-               playerId = player.name) %>%
-        drop_na(playerId, x, y)
-    }
   
-  data <- eventData
+  if(data_type == "opta") {
+    if(nrow(data) > 0 &&
+       sum(x = c("x", "y", "finalX", "finalY", "playerId") %in% names(data)) == 5) {
+    } else {
+      stop("The dataset has insufficient columns")
+    }
+    
+    to_sb <- rescale_coordinates(from = pitch_opta, to = pitch_statsbomb)
+    data$x <- to_sb$x(data$x)
+    data$y <- to_sb$y(data$y)
+    
+    data <- data %>%
+      drop_na(playerId, x, y)
+    
+  } else if(data_type == "statsbomb") {
+    
+    data <- data %>%
+      rename(x = location.x,
+             y = location.y,
+             playerId = player.name) %>%
+      drop_na(playerId, x, y)
+  }
   
   x_low <- quantile(data$x, 0.05)
   x_high <- quantile(data$x, 0.95)
@@ -86,19 +85,17 @@ plot_convexhull <- function(eventData, dataType = "statsbomb",
     purrr::map(hull_fun) %>%
     purrr::reduce(full_join)
   
-  if(titlePlot == "") {
-    titlePlot <- "Convex Hulls"
-  } else {
-    
-  }
-
+  if(title_plot == "") {
+    title_plot <- "Convex Hulls"
+  } else {}
+  
   convex_hull <- ggplot(hull_data) +
     annotate_pitch(dimensions = pitch_statsbomb, fill = fill_b, colour = colour_b) +
     theme_pitch() +
     geom_point(data = data, aes(x = x, y = y), alpha = 0.5, colour = colour_b) +
     geom_polygon(aes(x = x, y = y), colour = colour, alpha = 0.2, fill = colour, size = 1) +
     facet_wrap(~playerId) +
-    labs(title = titlePlot) +
+    labs(title = title_plot) +
     theme(plot.background = element_rect(fill = fill_b, colour = NA),
           panel.background = element_rect(fill = fill_b, colour = NA),
           strip.background = element_rect(fill = fill_b, colour = NA),
