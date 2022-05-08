@@ -4,10 +4,10 @@
 #' for plotting convex hulls on top of an outline of a football pitch.
 #'
 #' @param data Dataframe that houses pass data. Opta dataframe must contain atleast the following columns: `x`, `y`, `playerId`.
-#' @param data_type Type of data that is being put in: opta or statsbomb. Default set to "statsbomb"
-#' @param colour The colour of the outline of the convex hull
-#' @param title_plot Title of the plot
-#' @param theme Indicates what theme the map must be shown in: dark (default), white, rose, almond
+#' @param data_type Type of data that is being put in: opta or statsbomb. Default set to "statsbomb".
+#' @param colour The colour of the outline of the convex hull.
+#' @param title_plot Title of the plot.
+#' @param theme Indicates what theme the map must be shown in: dark (default), white, rose, almond.
 #' @return a ggplot2 object
 #'
 #' @import dplyr
