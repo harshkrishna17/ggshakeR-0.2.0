@@ -25,26 +25,13 @@
 #' }
 
 plot_convexhull <- function(data, data_type = "statsbomb", 
-                            colour, title_plot = "", theme = "dark") {
-  
-  if (theme == "dark") {
-    fill_b <- "#0d1117"
-    colour_b <- "white"
-  } else if (theme == "white") {
-    fill_b <- "#F5F5F5"
-    colour_b <- "black"
-  } else if (theme == "rose") {
-    fill_b <- "#FFE4E1"
-    colour_b <- "#696969"
-  } else if (theme == "almond") {
-    fill_b <- "#FFEBCD"
-    colour_b <- "#696969"
-  }
+                            colour = "#E74C3C", title_plot = "", theme = "dark") {
   
   if(data_type == "opta") {
     if(nrow(data) > 0 &&
-       sum(x = c("x", "y", "finalX", "finalY", "playerId") %in% names(data)) == 5) {
+       sum(x = c("x", "y", "playerId") %in% names(data)) == 3) {
     } else {
+      print(c("x", "y", "playerId"))
       stop("The dataset has insufficient columns")
     }
     
@@ -58,10 +45,22 @@ plot_convexhull <- function(data, data_type = "statsbomb",
   } else if(data_type == "statsbomb") {
     
     data <- data %>%
-      rename(x = location.x,
-             y = location.y,
-             playerId = player.name) %>%
+      rename(playerId = player.name) %>%
       drop_na(playerId, x, y)
+  }
+  
+  if (theme == "dark") {
+    fill_b <- "#0d1117"
+    colour_b <- "white"
+  } else if (theme == "white") {
+    fill_b <- "#F5F5F5"
+    colour_b <- "black"
+  } else if (theme == "rose") {
+    fill_b <- "#FFE4E1"
+    colour_b <- "#696969"
+  } else if (theme == "almond") {
+    fill_b <- "#FFEBCD"
+    colour_b <- "#696969"
   }
   
   x_low <- quantile(data$x, 0.05)
