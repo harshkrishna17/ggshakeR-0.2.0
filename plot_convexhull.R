@@ -3,7 +3,7 @@
 #' This function allows for data, that can be from Opta or Statsbomb, to be used
 #' for plotting convex hulls on top of an outline of a football pitch.
 #'
-#' @param data Dataframe that houses pass data. Opta dataframe must contain atleast the following columns: `x`, `y`, `playerId`.
+#' @param data Dataframe that houses pass data. Opta dataframe must contain atleast the following columns: `x`, `y`, `finalX`, `finalY`, `playerId`.
 #' @param data_type Type of data that is being put in: opta or statsbomb. Default set to "statsbomb".
 #' @param colour The colour of the outline of the convex hull.
 #' @param title_plot Title of the plot.
@@ -20,7 +20,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' plot <- plot_convexhull(eventData, dataType = "statsbomb", colour = "blue")
+#' plot <- plot_convexhull(data = data, data_type = "opta", colour = "blue", title_plot = "Team 1")
 #' plot
 #' }
 
@@ -29,9 +29,9 @@ plot_convexhull <- function(data, data_type = "statsbomb",
   
   if(data_type == "opta") {
     if(nrow(data) > 0 &&
-       sum(x = c("x", "y", "playerId") %in% names(data)) == 3) {
+       sum(x = c("x", "y", "finalX", "finalY", "playerId") %in% names(data)) == 5) {
     } else {
-      print(c("x", "y", "playerId"))
+      print(c("x", "y", "finalX", "finalY", "playerId"))
       stop("The dataset has insufficient columns")
     }
     
@@ -44,9 +44,12 @@ plot_convexhull <- function(data, data_type = "statsbomb",
     
   } else if(data_type == "statsbomb") {
     
-    data <- data %>%
-      rename(playerId = player.name) %>%
-      drop_na(playerId, x, y)
+    if (!"playerId" %in% colnames(data)) {
+      data <- data %>%
+        mutate(playerId = player.name)
+    }
+    
+    data <- data %>% drop_na(playerId, x, y)
   }
   
   if (theme == "dark") {
