@@ -26,7 +26,7 @@ testthat::test_that("Plotting scatterplots: ", {
   testthat::expect_identical(p$labels$y, "yA")
   testthat::expect_identical(p$labels$colour, "col_scat")
   testthat::expect_identical(p$labels$size, "size_scat")
-  
+
   # Testting for plotting with an empty dataframe
   p <- plot_scatter(
     data = df_empty,
@@ -35,7 +35,7 @@ testthat::test_that("Plotting scatterplots: ", {
     set_size_var = "size"
   )
   testthat::expect_true(!is.ggplot(p))
-  
+
   # Testing for using wrong/nonexistent column names
   p <- plot_scatter(
     data = df,
@@ -46,7 +46,7 @@ testthat::test_that("Plotting scatterplots: ", {
   )
   testthat::expect_true(is.ggplot(p))
   testthat::expect_identical(p$labels$size, "")
-  
+
   # Testing for using wrong x,y column names
   p <- plot_scatter(
     data = df,
@@ -65,7 +65,7 @@ testthat::test_that("Plotting scatterplots: ", {
 
 
 
-############# TESTING PLOT_SHOTS ################
+############# TESTING PLOT_SHOT ################
 # Creating simple dataframe for testing basic plots
 df <- data.frame(
   X = seq(81, 100, by = 1),
@@ -92,16 +92,16 @@ df_absent <- data.frame(
 testthat::test_that("Testing plotting pass flow maps: ", {
   p <- plot_shot(df, highlight_goals = TRUE, avg_loc = FALSE)
   testthat::expect_true(is.ggplot(p))
-  
+
   # testing for plotting on an empty dataframe
   p <- plot_shot(df_empty)
   testthat::expect_true(!is.ggplot(p))
-  
+
   # testing using a dataframe that does not have the required columns
   p <- plot_shot(df_absent)
   testthat::expect_true(!is.ggplot(p))
 })
-############# TESTING PLOT_SHOTS ################
+############# TESTING PLOT_SHOT ################
 
 
 
@@ -133,11 +133,11 @@ df_absent <- data.frame(
 testthat::test_that("Testing plotting passflow maps: ", {
   p <- plot_passflow(df)
   testthat::expect_true(is.ggplot(p))
-  
+
   # testing for plotting on an empty dataframe
   p <- plot_passflow(df_empty)
   testthat::expect_true(!is.ggplot(p))
-  
+
   # testing using a dataframe that does not have the required columns
   p <- plot_passflow(df_absent)
   testthat::expect_true(!is.ggplot(p))
@@ -151,39 +151,39 @@ testthat::test_that("Testing plotting passflow maps: ", {
 ############# TESTING PLOT_PASS ################
 # Creating simple dataframe for testing basic plots
 df <- data.frame(
-  location.x = seq(81, 100, by = 1),
-  location.y = seq(81, 100, by = 1),
-  pass.end_location.x = seq(51, 70, by = 1),
-  pass.end_location.y = seq(61, 80, by = 1),
+  x = seq(81, 100, by = 1),
+  y = seq(81, 100, by = 1),
+  finalX = seq(51, 70, by = 1),
+  finalY = seq(61, 80, by = 1),
   pass.outcome.name = rep(c("Unsuccessful", NA), times = 10),
   player.name = rep(c("Katsu"), times = 20)
 )
 
 # Creating an empty dataframe
-df_empty <- data.frame(matrix(ncol = 5, nrow = 0))
-x <- c("location.x", "location.y", "pass.end_location.x", "pass.end_location.y", "player.name")
+df_empty <- data.frame(matrix(ncol = 4, nrow = 0))
+x <- c("x", "y", "finalX", "finalY")
 colnames(df_empty) <- x
 
-# Creating simple dataframe for testing basic plots
+# Creating simple dataframe with missing columns
 df_absent <- data.frame(
-  location.x = seq(81, 100, by = 1),
-  location.y = seq(81, 100, by = 1),
-  pass.end_location.x = seq(51, 70, by = 1),
-  pass.outcome.name = rep(c("Unsuccessful", NA), times = 10)
+  x = seq(81, 100, by = 1),
+  y = seq(81, 100, by = 1),
+  finalX = seq(51, 70, by = 1)
 )
 
 
-testthat::test_that("Testing plotting shot maps: ", {
-  p <- plot_pass(df, plotType = "def", outcome = "suc")
+testthat::test_that("Testing plotting passes: ", {
+  p <- plot_pass(df, type = "sep", outcome = "suc")
   testthat::expect_true(is.ggplot(p))
-  
+
   # testing for plotting on an empty dataframe
-  p <- plot_pass(df_empty)
-  testthat::expect_true(!is.ggplot(p))
-  
-  # testing using a dataframe that does not have the required columns
-  p <- plot_pass(df_absent)
-  testthat::expect_true(!is.ggplot(p))
+  testthat::expect_error(plot_pass(df_empty),
+                         "The dataset has insufficient columns and/or insufficient data.",
+                         fixed = TRUE)
+  # testing on a dataframe with insufficient columns
+  testthat::expect_error(plot_pass(df_absent, data_type = "opta"),
+                         "The dataset has insufficient columns and/or insufficient data.",
+                         fixed = TRUE)
 })
 ############# TESTING PLOT_PASS ################
 
@@ -224,7 +224,7 @@ testthat::test_that("Testing plotting trendlines: ", {
     roll_avg = 10, theme = "dark"
   )
   testthat::expect_true(is.ggplot(p))
-  
+
   # testing for plotting on a dataframe with NA's
   p <- plot_trendline(
     data = data3, team = "Barcelona",
@@ -232,7 +232,7 @@ testthat::test_that("Testing plotting trendlines: ", {
     roll_avg = 10, theme = "dark"
   )
   testthat::expect_true(is.ggplot(p))
-  
+
   # testing using a dataframe that has limited rows
   p <- plot_trendline(
     data = data1, team = "Barcelona",
@@ -264,29 +264,31 @@ data2 <- readRDS(d2)
 data <- rbind(data1, data2)
 
 testthat::test_that("Testing plotting pizzas: ", {
-  p <- plot_pizza(
+  p <- suppressWarnings(plot_pizza(
     data = data, type = "comparison", template = "midfielder",
     player_1 = "Nicolo Barella", player_2 = "Ilkay Gundogan",
     season_player_1 = "Last 365 Days", season_player_2 = "Last 365 Days",
     colour_compare = "#90ee90", theme = "black"
-  )
-  testthat::expect_true(is.ggplot(p))
+  ))
   
+  testthat::expect_true(is.ggplot(p))
+
   # testing for single player plot
-  p <- plot_pizza(
+  p <- suppressWarnings(plot_pizza(
     data = data1, type = "single", template = "midfielder",
     colour_poss = "green", colour_att = "lightblue", season = "Last 365 Days",
     colour_def = "#fec44f", theme = "dark"
-  )
-  testthat::expect_true(is.ggplot(p))
+  ))
   
+  testthat::expect_true(is.ggplot(p))
+
   # testing for comparison plot
-  p <- plot_pizza(
+  p <- suppressWarnings(plot_pizza(
     data = data, type = "comparison", template = "midfielder",
     player_1 = "Nicolo Barella", player_2 = "Ilkay Gundogan",
     season_player_1 = "Last 365 Days", season_player_2 = "Last 365 Days",
     colour_compare = "#90ee90", theme = "black"
-  )
+  ))
   testthat::expect_true(is.ggplot(p))
 })
 ############# TESTING PLOT_PIZZA ################
@@ -320,11 +322,11 @@ df_absent <- data.frame(
 testthat::test_that("Testing plotting heatmaps: ", {
   p <- plot_heatmap(df, type = "hex")
   testthat::expect_true(is.ggplot(p))
-  
+
   # testing for plotting on an empty dataframe
   p <- plot_heatmap(df_empty)
   testthat::expect_true(!is.ggplot(p))
-  
+
   # testing using a dataframe that does not have the required columns
   p <- plot_heatmap(df_absent)
   testthat::expect_true(!is.ggplot(p))
@@ -353,14 +355,25 @@ df_empty <- data.frame(matrix(ncol = 4, nrow = 0))
 x <- c("x", "y", "finalX", "finalY")
 colnames(df_empty) <- x
 
+#Creating a dataframe with one less column
+df_absent <- data.frame(
+  x = seq(81, 100, by = 1),
+  y = seq(81, 100, by = 1),
+  finalY = seq(61, 80, by = 1)
+)
+
 testthat::test_that("Testing calculation of expected threat: ", {
   p <- calculate_threat(df, dataType = "statsbomb")
   testthat::expect_equal((ncol(df) + 2), ncol(p))
-  
-  
+
+  p <- calculate_threat(df)
+  testthat::expect_equal((ncol(df) + 2), ncol(p))
+
   # testing for plotting on an empty dataframe
-  p <- plot_heatmap(df_empty)
-  testthat::expect_equal(NULL, ncol(p))
+  testthat::expect_error(calculate_threat(df_empty),
+                         "Dataframe has insufficient number of rows and/or you don't have the right amount of columns: x,y,finalX, finalY")
+  testthat::expect_error(calculate_threat(df_absent),
+                         "Dataframe has insufficient number of rows and/or you don't have the right amount of columns: x,y,finalX, finalY")
 })
 ############# TESTING CALCULATE_THREAT ################
 
@@ -394,11 +407,11 @@ df_absent <- data.frame(
 testthat::test_that("Testing plotting sonars: ", {
   p <- plot_sonar(df, titlePlot = "Test 1")
   testthat::expect_true(is.ggplot(p))
-  
+
   # testing for plotting on an empty dataframe
   p <- plot_sonar(df_empty)
   testthat::expect_true(!is.ggplot(p))
-  
+
   # testing using a dataframe that does not have the required columns
   p <- plot_sonar(df_absent)
   testthat::expect_true(!is.ggplot(p))
@@ -571,6 +584,7 @@ data <- data.frame(
   )
 )
 
+
 testthat::test_that("Testing plotting timelines: ", {
   p <- plot_timeline(
     data = data, match_year = 2021, team_home = "Manchester United", team_away = "Manchester City",
@@ -606,13 +620,82 @@ data <- data.frame(playerId = names_rep,
                    finalX = finalX, 
                    finalY = finalY)
 
+# Dataset without the required columns 
+
+data_absent <- data[, c("x", "y", "finalX", "finalY")]
+
+# Empty dataset
+
+data_empty <- data.frame(matrix(ncol = 5, nrow = 0))
+x <- c("x", "y", "finalX", "finalY", "playerId")
+colnames(data_empty) <- x
+
 # Test
 
 testthat::test_that("Testing plotting convex hulls: ", {
   p <- plot_convexhull(data, data_type = "opta", title_plot = "Test 1")
   testthat::expect_true(is.ggplot(p))
+  
+  # testing for plotting on an empty dataframe
+  testthat::expect_error(plot_convexhull(data_empty, data_type = "opta"),
+                         "The dataset has insufficient columns and/or insufficient data.",
+                         fixed = TRUE)
+  
+  # testing using a dataframe that does not have the required columns
+  testthat::expect_error(plot_convexhull(data_absent, data_type = "opta"),
+                         "The dataset has insufficient columns and/or insufficient data.",
+                         fixed = TRUE)
 })
 ############# TESTING PLOT_CONVEXHULL ################
+
+
+
+
+
+
+############# TESTING PLOT_VORONOI ################
+# Creating simple dataframe for testing basic plots
+x <- sample.int(100, 10)
+y <- sample.int(100, 10)
+
+opta_df <- data.frame(x, y)
+
+
+x <- sample.int(120, 10)
+y <- sample.int(80, 10)
+
+sb_df <- data.frame(x, y)
+
+# Creating an empty dataframe
+df_empty <- data.frame(matrix(ncol = 2, nrow = 0))
+x <- c("x", "y")
+colnames(df_empty) <- x
+
+# Creating simple dataframe for testing basic plots
+x <- sample.int(100, 10)
+
+df_absent <- data.frame(x)
+
+# Test
+
+testthat::test_that("Testing plotting voronoi plots: ", {
+  p <- plot_voronoi(opta_df, data_type = "opta", voro_fill = "y", voro_alpha = 0.3)
+  testthat::expect_true(is.ggplot(p))
+  
+  p <- plot_voronoi(sb_df, data_type = "statsbomb", voro_fill = "y", voro_alpha = 0.3)
+  testthat::expect_true(is.ggplot(p))
+  
+  # testing for plotting on an empty dataframe
+  testthat::expect_error(plot_voronoi(df_empty, data_type = "opta"),
+                         "The dataset has insufficient columns and/or insufficient data.",
+                         fixed = TRUE)
+  
+  # testing using a dataframe that does not have the required columns
+  testthat::expect_error(plot_voronoi(df_absent, data_type = "opta"),
+                         "The dataset has insufficient columns and/or insufficient data.",
+                         fixed = TRUE)
+})
+############# TESTING PLOT_VORONOI ################
 
 
 
@@ -654,12 +737,78 @@ data <- data.frame(teamId = teams_rep,
                    type = type_rep,
                    outcome = outcome_rep)
 
-data$type[c(500,600,700)] <- "SubstitutionOff"
+data$type[c(500, 600, 700)] <- "SubstitutionOff"
+
+# Dataset without the required columns 
+
+data_absent <- data[, c("x", "y", "finalX", "finalY")]
+
+# Empty dataset
+
+data_empty <- data.frame(matrix(ncol = 9, nrow = 0))
+x <- c("x", "y", "finalX", "finalY", "playerId", "teamId", "type", "minute", "outcome")
+colnames(data_empty) <- x
 
 # Test 
 
 testthat::test_that("Testing plotting pass networks: ", {
+  #testing
   p <- plot_passnet(data, data_type = "opta", team_name = "Team 1", subtitle_plot = "Test 1")
   testthat::expect_true(is.ggplot(p))
+  
+  # testing for plotting on an empty dataframe
+  testthat::expect_error(plot_passnet(data_empty, data_type = "opta", team_name = "Team 1"),
+                         "The dataset has insufficient columns and/or insufficient data.",
+                         fixed = TRUE)
+  
+  # testing using a dataframe that does not have the required columns
+  testthat::expect_error(plot_passnet(data_absent, data_type = "opta", team_name = "Team 1"),
+                         "The dataset has insufficient columns and/or insufficient data.",
+                         fixed = TRUE)
 })
 ############# TESTING PLOT_PASSNET ################
+
+
+
+
+
+
+
+
+
+############# TESTING CALCULATE_EPV ################
+df <- data.frame(
+  x = seq(81, 100, by = 1),
+  y = seq(81, 100, by = 1),
+  finalX = seq(51, 70, by = 1),
+  finalY = seq(61, 80, by = 1)
+)
+
+# Creating an empty dataframe
+df_empty <- data.frame(matrix(ncol = 4, nrow = 0))
+x <- c("x", "y", "finalX", "finalY")
+colnames(df_empty) <- x
+
+#Creating a dataframe with one less column
+df_absent <- data.frame(
+  x = seq(81, 100, by = 1),
+  y = seq(81, 100, by = 1),
+  finalY = seq(61, 80, by = 1)
+)
+
+testthat::test_that("Testing calculation of expected threat: ", {
+  p <- calculate_epv(df, dataType = "statsbomb")
+  testthat::expect_equal((ncol(df) + 2), ncol(p))
+  
+  p <- calculate_epv(df)
+  testthat::expect_equal((ncol(df) + 2), ncol(p))
+  
+  
+  # testing for plotting on an empty dataframe
+  testthat::expect_error(calculate_epv(df_empty),
+                         "Dataframe has insufficient number of rows and/or you don't have the right amount of columns: x,y,finalX, finalY")
+  
+  testthat::expect_error(calculate_epv(df_absent),
+                         "Dataframe has insufficient number of rows and/or you don't have the right amount of columns: x,y,finalX, finalY")
+})
+############# TESTING CALCULATE_EPV ################
